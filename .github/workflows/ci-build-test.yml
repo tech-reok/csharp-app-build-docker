@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          clean: false
 
       - name: Generate Docker tag
         id: meta
@@ -43,7 +45,11 @@ jobs:
       - name: Extract publish and coverage from image
         shell: bash
         run: |
-          rm -rf publish coverage coveragereport
+          docker run --rm \
+            -v "${PWD}:/workspace" \
+            busybox:1.36 \
+            sh -c "rm -rf /workspace/publish /workspace/coverage /workspace/coveragereport"
+
           mkdir -p coverage
 
           if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -81,8 +87,9 @@ jobs:
           docker run --rm \
             -v "${PWD}:/workspace" \
             -w /workspace \
+            --user "$(id -u):$(id -g)" \
             mcr.microsoft.com/dotnet/sdk:8.0 \
-            bash -lc "dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.* && export PATH=\$PATH:/root/.dotnet/tools && reportgenerator '-reports:/workspace/coverage/**/coverage.cobertura.xml' '-targetdir:/workspace/coveragereport' '-reporttypes:HtmlInline_AzurePipelines;MarkdownSummary'"
+            bash -lc "export HOME=/tmp && dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.* && export PATH=\$PATH:/tmp/.dotnet/tools && reportgenerator '-reports:/workspace/coverage/**/coverage.cobertura.xml' '-targetdir:/workspace/coveragereport' '-reporttypes:HtmlInline_AzurePipelines;MarkdownSummary'"
 
       - name: Upload Report
         uses: actions/upload-artifact@v4

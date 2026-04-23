@@ -76,7 +76,7 @@ jobs:
           if-no-files-found: error
 
       - name: Generate Report
-        uses: danielpalme/ReportGenerator_Action@v5
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.2.4
         with:
           reports: 'coverage/**/coverage.cobertura.xml'
           targetdir: 'coveragereport'

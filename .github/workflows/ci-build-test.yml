@@ -20,10 +20,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           clean: false
+          path: src
 
       - name: Generate Docker tag
         id: meta
         shell: bash
+        working-directory: src
         run: |
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
           SHORT_SHA="${GITHUB_SHA::7}"
@@ -35,6 +37,7 @@ jobs:
 
       - name: Build Docker image
         shell: bash
+        working-directory: src
         run: |
           docker build \
             --target busybox_artifacts \
@@ -44,6 +47,7 @@ jobs:
 
       - name: Extract publish and coverage from image
         shell: bash
+        working-directory: src
         run: |
           docker run --rm \
             -v "${PWD}:/workspace" \
@@ -78,11 +82,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: publish-${{ steps.meta.outputs.short_sha }}
-          path: publish/
+          path: src/publish/
           if-no-files-found: error
 
       - name: Generate Report (containerized)
         shell: bash
+        working-directory: src
         run: |
           docker run --rm \
             -v "${PWD}:/workspace" \
@@ -95,12 +100,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-${{ steps.meta.outputs.short_sha }}
-          path: coveragereport/
+          path: src/coveragereport/
           if-no-files-found: error
 
       - name: Capture coverage result
         id: coverage_result
         shell: bash
+        working-directory: src
         run: |
           SUMMARY_LINE="Coverage summary not found"
           if [ -f coveragereport/Summary.md ]; then
@@ -120,6 +126,7 @@ jobs:
 
       - name: Job summary
         shell: bash
+        working-directory: src
         run: |
           {
             echo "## CI Build/Test Summary"

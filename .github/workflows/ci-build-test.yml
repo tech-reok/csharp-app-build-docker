@@ -75,12 +75,14 @@ jobs:
           path: publish/
           if-no-files-found: error
 
-      - name: Generate Report
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.2.4
-        with:
-          reports: 'coverage/**/coverage.cobertura.xml'
-          targetdir: 'coveragereport'
-          reporttypes: 'HtmlInline_AzurePipelines;MarkdownSummary'
+      - name: Generate Report (containerized)
+        shell: bash
+        run: |
+          docker run --rm \
+            -v "${PWD}:/workspace" \
+            -w /workspace \
+            mcr.microsoft.com/dotnet/sdk:8.0 \
+            bash -lc "dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.* && export PATH=\$PATH:/root/.dotnet/tools && reportgenerator '-reports:/workspace/coverage/**/coverage.cobertura.xml' '-targetdir:/workspace/coveragereport' '-reporttypes:HtmlInline_AzurePipelines;MarkdownSummary'"
 
       - name: Upload Report
         uses: actions/upload-artifact@v4

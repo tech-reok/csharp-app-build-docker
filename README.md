@@ -5,8 +5,8 @@ Simple C# Web API built using Docker-friendly ASP.NET Core structure.
 ## Run locally
 
 ```bash
-dotnet build /home/runner/work/csharp-app-build-docker/csharp-app-build-docker/csharp-app-build-docker.slnx
-dotnet run --project /home/runner/work/csharp-app-build-docker/csharp-app-build-docker/CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj
+dotnet build csharp-app-build-docker.slnx
+dotnet run --project CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj
 ```
 
 ## Endpoints

@@ -1,0 +1,127 @@
+name: CI Build Test
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: [self-hosted, Linux, ARM64, tech-reok-builders]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Docker tag
+        id: meta
+        shell: bash
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          DOCKER_TAG="marcocantugea/${REPO_NAME}:${SHORT_SHA}"
+
+          echo "repo_name=${REPO_NAME}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=${DOCKER_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Docker image
+        shell: bash
+        run: |
+          docker build \
+            --target busybox_artifacts \
+            -f .github/dockerfile \
+            -t "${{ steps.meta.outputs.docker_tag }}" \
+            .
+
+      - name: Extract publish and coverage from image
+        shell: bash
+        run: |
+          rm -rf publish coverage
+          mkdir -p coverage
+
+          if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            mkdir -p publish
+          fi
+
+          CID="$(docker create "${{ steps.meta.outputs.docker_tag }}")"
+          docker cp "${CID}:/artifacts/coverage/." ./coverage/
+
+          if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            docker cp "${CID}:/artifacts/publish/." ./publish/
+          fi
+
+          docker rm "${CID}"
+
+          echo "Extracted files:"
+          if [ -d publish ]; then
+            find publish coverage -maxdepth 4 -type f | sort
+          else
+            find coverage -maxdepth 4 -type f | sort
+          fi
+
+      - name: Upload publish artifact
+        id: upload_publish
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-${{ steps.meta.outputs.short_sha }}
+          path: publish/
+          if-no-files-found: error
+
+      - name: Coverage summary
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage/**/coverage.cobertura.xml
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+      - name: Capture coverage result
+        id: coverage_result
+        shell: bash
+        run: |
+          SUMMARY_LINE="Summary row not found in coverage report"
+          if [ -f code-coverage-results.md ]; then
+            MATCH="$(grep -E '^\| Summary \|' code-coverage-results.md | head -n 1 || true)"
+            if [ -n "$MATCH" ]; then
+              SUMMARY_LINE="$MATCH"
+            fi
+          fi
+
+          {
+            echo "coverage_summary<<EOF"
+            echo "$SUMMARY_LINE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Job summary
+        shell: bash
+        run: |
+          {
+            echo "## CI Build/Test Summary"
+            echo ""
+            echo "- Docker tag: ${{ steps.meta.outputs.docker_tag }}"
+            if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "- Publish artifact id: ${{ steps.upload_publish.outputs.artifact-id }}"
+            else
+              echo "- Publish artifact id: not-uploaded (event: ${{ github.event_name }})"
+            fi
+            echo "- Coverage result: ${{ steps.coverage_result.outputs.coverage_summary }}"
+            echo ""
+            if [ -f code-coverage-results.md ]; then
+              echo "### Coverage report"
+              cat code-coverage-results.md
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

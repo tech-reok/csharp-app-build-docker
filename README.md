@@ -9,6 +9,13 @@ dotnet build csharp-app-build-docker.slnx
 dotnet run --project CsharpAppBuildDocker.Api/CsharpAppBuildDocker.Api.csproj
 ```
 
+## Run tests
+
+```bash
+dotnet test csharp-app-build-docker.slnx
+dotnet test csharp-app-build-docker.slnx --collect:"XPlat Code Coverage"
+```
+
 ## Endpoints
 
 1. `GET /api/health`  

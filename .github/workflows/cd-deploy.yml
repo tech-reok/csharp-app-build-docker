@@ -12,8 +12,16 @@ jobs:
     runs-on: [self-hosted, Linux, ARM64, tech-reok-builders]
 
     steps:
+      - name: Cleanup workspace as root
+        shell: bash
+        run: |
+          # we use a lightweight image to clean the directory with root permissions
+          docker run --rm -v "${{ github.workspace }}:/workspace" busybox sh -c "rm -rf /workspace/*"
+
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          clean: true
 
       - name: Extract Artifacts from Busybox
         run: |

@@ -1,4 +1,4 @@
-name: CD Local Deploy with Compose
+name: CD Local Deploy with Docker
 
 on:
   workflow_dispatch:
@@ -34,6 +34,11 @@ jobs:
           docker cp $CID:/artifacts/publish/. ./deploy_temp
           docker rm $CID
           chmod -R 755 ./deploy_temp
+
+      - name: Fix Permissions
+        run: |
+          chmod -R 755 ./deploy_temp
+          sudo chown -R 1000:1000 ./deploy_temp
 
       - name: Deploy with Docker Compose
         run: |

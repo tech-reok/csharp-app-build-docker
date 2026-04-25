@@ -5,9 +5,11 @@ services:
     ports:
       - "8089:8080"
     restart: always
+    environment:
+      - DOTNET_URLS=http://+:8080
     volumes:
-      # Mounsting the folder where we extracted the files from the busybox
-      - ./deploy_temp:/app
+      # Usamos la ruta completa que nos dio el debug para asegurar
+      - /home/mcantu/actions-runner/_work/csharp-app-build-docker/csharp-app-build-docker/deploy_temp:/app
     working_dir: /app
     # Now the runtime will find the 'dotnet' command
     entrypoint: ["dotnet", "CsharpAppBuildDocker.Api.dll"]

@@ -25,6 +25,20 @@ jobs:
           clean: false
           path: src
 
+      - name: Setup commit on version info
+        shell: bash
+        working-directory: src
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          echo "Setting commit hash in appsettings.json: ${COMMIT_HASH}"
+          # We use 'jq' to update the JSON file with the commit hash
+          if [ -f CsharpAppBuildDocker.Api/appsettings.json ]; then
+            jq --arg hash "$COMMIT_HASH" '.CommitHash = $hash' CsharpAppBuildDocker.Api/appsettings.json > tmp.$$.json && mv tmp.$$.json CsharpAppBuildDocker.Api/appsettings.json
+            echo "Updated appsettings.json with commit hash."
+          else
+            echo "appsettings.json not found, skipping commit hash update."
+          fi
+
       - name: Generate Docker tag
         id: meta
         shell: bash

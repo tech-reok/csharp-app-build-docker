@@ -10,6 +10,7 @@ public sealed class HealthController(IHealthService healthService) : ControllerB
     [HttpGet]
     public IActionResult GetStatus()
     {
-        return Ok(new { status = healthService.GetStatus() });
+        var version = System.IO.File.ReadAllText("appsettings.json");
+        return Ok(new { status = healthService.GetStatus(), version=version, commitHash=healthService.GetCommitHash() });
     }
 }

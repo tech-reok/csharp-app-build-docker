@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - master
+    paths:
+      - 'CsharpAppBuildDocker.Api/**'
+      - 'CsharpAppBuildDocker.Api.Tests/**'
   workflow_dispatch:
   pull_request:
 

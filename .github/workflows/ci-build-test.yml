@@ -108,7 +108,7 @@ jobs:
             --user "$(id -u):$(id -g)" \
             mcr.microsoft.com/dotnet/sdk:8.0 \
             bash -lc "export HOME=/tmp && dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.* && export PATH=\$PATH:/tmp/.dotnet/tools && reportgenerator '-reports:/workspace/coverage/**/coverage.cobertura.xml' '-targetdir:/workspace/coveragereport' '-reporttypes:HtmlInline_AzurePipelines;MarkdownSummary' && \
-                     chmod -R 777 /workspace/coveragereport""
+                     chmod -R 777 /workspace/coveragereport"
 
       - name: Upload Report
         uses: actions/upload-artifact@v4

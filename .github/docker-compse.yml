@@ -1,0 +1,12 @@
+services:
+  api:
+    image: ${DOCKER_TAG}
+    container_name: csharp-api-prod
+    ports:
+      - "8089:8080"
+    restart: always
+    # Como tu imagen actual es Busybox, necesitamos sobreescribir el comando
+    # o usar una imagen de runtime. Aquí asumimos que usas la imagen de artefactos
+    # y la montas en un runtime de .NET:
+    command: ["dotnet", "CsharpAppBuildDocker.Api.dll"]
+    working_dir: /app

@@ -1,12 +1,13 @@
 services:
   api:
-    image: ${DOCKER_TAG}
+    image: mcr.microsoft.com/dotnet/aspnet:8.0
     container_name: csharp-api-prod
     ports:
       - "8089:8080"
     restart: always
-    # Como tu imagen actual es Busybox, necesitamos sobreescribir el comando
-    # o usar una imagen de runtime. Aquí asumimos que usas la imagen de artefactos
-    # y la montas en un runtime de .NET:
-    command: ["dotnet", "CsharpAppBuildDocker.Api.dll"]
+    volumes:
+      # Mounsting the folder where we extracted the files from the busybox
+      - ./deploy_temp:/app
     working_dir: /app
+    # Now the runtime will find the 'dotnet' command
+    entrypoint: ["dotnet", "CsharpAppBuildDocker.Api.dll"]

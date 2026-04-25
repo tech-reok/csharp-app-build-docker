@@ -45,3 +45,9 @@ jobs:
         run: |
           docker ps | grep csharp-api-prod
           echo "Deployment finished on port ${{ github.event.inputs.port }}"
+
+      - name: Debug Path and Content
+        run: |
+          echo "Current Path: $(pwd)"
+          echo "Checking deploy_temp content:"
+          ls -R ./deploy_temp

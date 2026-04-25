@@ -33,6 +33,7 @@ jobs:
           CID=$(docker create ${{ github.event.inputs.docker_tag }})
           docker cp $CID:/artifacts/publish/. ./deploy_temp
           docker rm $CID
+          chmod -R 755 ./deploy_temp
 
       - name: Deploy with Docker Compose
         run: |
